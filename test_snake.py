@@ -38,3 +38,10 @@ def test_game_over(handler):
     handler.check_game_over()
     assert handler.snake == [(5,4), (5,5), (5,4)]
     assert handler.last_input == 'end'
+
+def test_score(handler):
+    handler.snake = [(5,5)]
+    handler.fruit = (5,4)
+    handler.last_input = 'w'
+    handler.move_snake()
+    assert len(handler.snake) == 2

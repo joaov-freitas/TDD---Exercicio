@@ -12,7 +12,7 @@ class io_handler:
     last_input: str
     matrix = []
     snake: list[tuple[int, int]]
-    fruit: tuple[int, int]
+    fruit: list[tuple[int, int]]
 
     def __init__(self, dim, speed):
         self.x_size = dim[0]
@@ -22,10 +22,10 @@ class io_handler:
         self.last_input = 'w'
 
         self.snake = [(self.x_size//2, self.y_size//2)]
-        self.fruit = (random.randint(0,self.x_size),random.randint(0,self.y_size))
+        self.fruit = [(random.randint(0,self.x_size),random.randint(0,self.y_size))]
 
         if self.fruit == self.snake[0]:
-            self.fruit = (self.fruit[0]-1,self.fruit[1]-1)
+            self.gerar_nova_fruta()
 
         for i in range (self.y_size): 
             self.matrix.append([0]*self.x_size)
@@ -49,24 +49,26 @@ class io_handler:
 
         self.snake.insert(0, nova_cabeca)
 
-        if nova_cabeca == self.fruit:
+        if nova_cabeca in self.fruit:
             self.gerar_nova_fruta()
+            self.fruit.remove(nova_cabeca)
         else:
             self.snake.pop()
 
     def gerar_nova_fruta(self):
-        while True:
-            nova_fruta = (random.randint(0, self.x_size - 1), random.randint(0, self.y_size - 1))
+        amount_fruits = (len(self.snake)//10) + 1
+        for _ in range(amount_fruits):
+            while len(self.fruit) <= amount_fruits:
+                nova_fruta = (random.randint(0, self.x_size - 1), random.randint(0, self.y_size - 1))
             
-            if nova_fruta not in self.snake:
-                self.fruit = nova_fruta
-                break
+                if nova_fruta not in self.snake:
+                    self.fruit.append(nova_fruta)
+                    break
 
     def check_game_over(self):
         head = self.snake[0]
         if head in self.snake[1:]:
             self.last_input = 'end'
-            print("Game Over! A cobra colidiu consigo mesma.")
 
     def record_inputs(self):
         keyboard.add_hotkey('w', lambda: setattr(self, "last_input", 'w'))
@@ -94,9 +96,10 @@ class io_handler:
                 self.matrix[y][x] = 2  # 2 = cabeça
         
         # Marca a fruta
-        fx, fy = self.fruit
-        if 0 <= fx < self.x_size and 0 <= fy < self.y_size:
-            self.matrix[fy][fx] = 3  # 3 = fruta
+        for fruit in self.fruit:
+            fx, fy = fruit
+            if 0 <= fx < self.x_size and 0 <= fy < self.y_size:
+                self.matrix[fy][fx] = 3  # 3 = fruta
 
         def display_h_line(self):
             print ('+', end='')
@@ -134,8 +137,12 @@ def game_loop():
         ###adicione seu código para lidar com o jogo aqui
         instance.move_snake()
         instance.check_game_over()
+
+        
         print(instance.last_input)
+        print("Pontuação:", len(instance.snake))
         if(instance.last_input == 'end'):
+            print("Game Over! A cobra colidiu consigo mesma.")
             exit()
         time.sleep(instance.game_speed)
 
