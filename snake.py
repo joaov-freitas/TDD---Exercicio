@@ -7,7 +7,7 @@ class io_handler:
     
     x_size: int
     y_size: int
-    game_speed = float
+    game_speed: float
     last_input: str
     matrix = []
 
