@@ -8,11 +8,11 @@ class io_handler:
     
     x_size: int
     y_size: int
-    game_speed = float
+    game_speed: float
     last_input: str
     matrix = []
-    snake = list
-    fruit: tuple
+    snake: list[tuple[int, int]]
+    fruit: tuple[int, int]
 
     def __init__(self, dim, speed):
         self.x_size = dim[0]
@@ -31,35 +31,37 @@ class io_handler:
             self.matrix.append([0]*self.x_size)
 
     def move_snake(self):
-        if len(self.snake) == 0:
+        if len(self.snake) == 0: 
             return
-        hx,hy = self.snake[0]
+        
+        hx, hy = self.snake[0] 
 
         if self.last_input == 'w':
-            for i in range(len(self.snake)):
-                if self.snake[i][1] == 0:
-                    self.snake[i] = (self.snake[i][0],self.y_size)
-                else:
-                    self.snake[i] = (self.snake[i][0],self.snake[i][1]-1)
-        if self.last_input == 'a':
-            for i in range(len(self.snake)):
-                if self.snake[i][0] == 0:
-                    self.snake[i] = (self.x_size,self.snake[i][1])
-                else:
-                    self.snake[i] = (self.snake[i][0]-1,self.snake[i][1])
-        if self.last_input == 's':
-            for i in range(len(self.snake)):
-                if self.snake[i][1] == self.y_size:
-                    self.snake[i] = (self.snake[i][0],0)
-                else:
-                    self.snake[i] = (self.snake[i][0],self.snake[i][1]+1)
-        if self.last_input == 'd':
-            for i in range(len(self.snake)):
-                if self.snake[i][0] == self.x_size:
-                    self.snake[i] = (0,self.snake[i][1])
-                else:
-                    self.snake[i] = (self.snake[i][0]+1,self.snake[i][1])
-        
+            nova_cabeca = (hx, self.y_size - 1 if hy == 0 else hy - 1)
+        elif self.last_input == 'a':
+            nova_cabeca = (self.x_size - 1 if hx == 0 else hx - 1, hy)
+        elif self.last_input == 's':
+            nova_cabeca = (hx, 0 if hy == self.y_size - 1 else hy + 1)
+        elif self.last_input == 'd':
+            nova_cabeca = (0 if hx == self.x_size - 1 else hx + 1, hy)
+        else:
+            nova_cabeca = (hx, hy)
+
+        self.snake.insert(0, nova_cabeca)
+
+        if nova_cabeca == self.fruit:
+            self.gerar_nova_fruta()
+        else:
+            self.snake.pop()
+
+    def gerar_nova_fruta(self):
+        while True:
+            nova_fruta = (random.randint(0, self.x_size - 1), random.randint(0, self.y_size - 1))
+            
+            if nova_fruta not in self.snake:
+                self.fruit = nova_fruta
+                break
+
 
 
     def record_inputs(self):

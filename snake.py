@@ -1,6 +1,7 @@
 import os
 import keyboard
 import time
+import random
 
 
 class io_handler:
@@ -9,7 +10,9 @@ class io_handler:
     y_size: int
     game_speed: float
     last_input: str
-    matrix = []
+    matrix: list[list[int]]
+    snake: list[tuple[int, int]]
+    fruit: tuple[int, int]
 
     def __init__(self, dim, speed):
         self.x_size = dim[0]
@@ -18,8 +21,46 @@ class io_handler:
         self.game_speed = speed
         self.last_input = 'w'
 
+        self.snake = [(self.x_size//2, self.y_size//2)]
+        self.fruit = (random.randint(0,self.x_size),random.randint(0,self.y_size))
+
+        if self.fruit == self.snake[0]:
+            self.fruit = (self.fruit[0]-1,self.fruit[1]-1)
+
         for i in range (self.y_size): 
             self.matrix.append([0]*self.x_size)
+
+    def move_snake(self):
+        if len(self.snake) == 0: 
+            return
+        hx,hy = self.snake[0] 
+
+        if self.last_input == 'w':
+            for i in range(len(self.snake)):
+                if self.snake[i][1] == 0:
+                    self.snake[i] = (self.snake[i][0],self.y_size)
+                else:
+                    self.snake[i] = (self.snake[i][0],self.snake[i][1]-1)
+        if self.last_input == 'a':
+            for i in range(len(self.snake)):
+                if self.snake[i][0] == 0:
+                    self.snake[i] = (self.x_size,self.snake[i][1])
+                else:
+                    self.snake[i] = (self.snake[i][0]-1,self.snake[i][1])
+        if self.last_input == 's':
+            for i in range(len(self.snake)):
+                if self.snake[i][1] == self.y_size:
+                    self.snake[i] = (self.snake[i][0],0)
+                else:
+                    self.snake[i] = (self.snake[i][0],self.snake[i][1]+1)
+        if self.last_input == 'd':
+            for i in range(len(self.snake)):
+                if self.snake[i][0] == self.x_size:
+                    self.snake[i] = (0,self.snake[i][1])
+                else:
+                    self.snake[i] = (self.snake[i][0]+1,self.snake[i][1])
+        
+
 
     def record_inputs(self):
         keyboard.add_hotkey('w', lambda: setattr(self, "last_input", 'w'))
@@ -29,6 +70,28 @@ class io_handler:
         keyboard.add_hotkey('esc', lambda: setattr(self, "last_input", 'end'))
 
     def display(self):
+        # Limpar a matriz
+        for i in range(self.y_size):
+            for j in range(self.x_size):
+                self.matrix[i][j] = 0
+
+        # Marca o corpo da cobra
+        for i in range(1, len(self.snake)):
+            x, y = self.snake[i]
+            if 0 <= x < self.x_size and 0 <= y < self.y_size:
+                self.matrix[y][x] = 1  # 1 = corpo
+        
+        # Marca a cabeça da cobra
+        if len(self.snake) > 0:
+            x, y = self.snake[0]
+            if 0 <= x < self.x_size and 0 <= y < self.y_size:
+                self.matrix[y][x] = 2  # 2 = cabeça
+        
+        # Marca a fruta
+        fx, fy = self.fruit
+        if 0 <= fx < self.x_size and 0 <= fy < self.y_size:
+            self.matrix[fy][fx] = 3  # 3 = fruta
+
         def display_h_line(self):
             print ('+', end='')
             print ('--'* len(self.matrix[0]), end='')
@@ -56,9 +119,6 @@ class io_handler:
 
 ### exemplo do uso da classe io_handler  
 instance = io_handler((10,15), 0.5)
-instance.matrix[0][0] = 1 #corpo
-instance.matrix[0][1] = 2 #cabeça
-instance.matrix[0][2] = 3 #fruta
 
 def game_loop():
     instance.record_inputs()
@@ -66,7 +126,7 @@ def game_loop():
         instance.display()
         print("mova com WASD, saia com esc. Ultimo botão:", end=' ')
         ###adicione seu código para lidar com o jogo aqui
-
+        instance.move_snake()
         print(instance.last_input)
         if(instance.last_input == 'end'):
             exit()

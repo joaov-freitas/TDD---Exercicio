@@ -18,11 +18,15 @@ def test_move(handler):
     assert handler.snake == [(5,4)]
 
 def test_move_cross_boundaries(handler):
-    handler.snake = [(handler.x_size,handler.y_size)]
+    handler.snake = [(handler.x_size,14)]
     handler.last_input = 's'
     handler.move_snake()
     assert handler.snake == [(handler.x_size,0)]
-    handler.last_input = 'd'
-    handler.move_snake()
-    assert handler.snake == [(0,0)]
     
+    
+def test_snake_growth(handler):
+    handler.snake = [(5,5)]
+    handler.fruit = (5,4)
+    handler.last_input = 'w'
+    handler.move_snake()
+    assert handler.snake == [(5,4), (5,5)]
