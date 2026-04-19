@@ -62,7 +62,11 @@ class io_handler:
                 self.fruit = nova_fruta
                 break
 
-
+    def check_game_over(self):
+        head = self.snake[0]
+        if head in self.snake[1:]:
+            self.last_input = 'end'
+            print("Game Over! A cobra colidiu consigo mesma.")
 
     def record_inputs(self):
         keyboard.add_hotkey('w', lambda: setattr(self, "last_input", 'w'))
@@ -120,7 +124,7 @@ class io_handler:
         display_h_line(self)
 
 ### exemplo do uso da classe io_handler  
-instance = io_handler((10,15), 0.5)
+instance = io_handler((10,15), 0.25)
 
 def game_loop():
     instance.record_inputs()
@@ -129,6 +133,7 @@ def game_loop():
         print("mova com WASD, saia com esc. Ultimo botão:", end=' ')
         ###adicione seu código para lidar com o jogo aqui
         instance.move_snake()
+        instance.check_game_over()
         print(instance.last_input)
         if(instance.last_input == 'end'):
             exit()

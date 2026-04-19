@@ -30,3 +30,11 @@ def test_snake_growth(handler):
     handler.last_input = 'w'
     handler.move_snake()
     assert handler.snake == [(5,4), (5,5)]
+
+def test_game_over(handler):
+    handler.snake = [(5,5), (5,4), (5,3)]
+    handler.last_input = 'w'
+    handler.move_snake()
+    handler.check_game_over()
+    assert handler.snake == [(5,4), (5,5), (5,4)]
+    assert handler.last_input == 'end'
