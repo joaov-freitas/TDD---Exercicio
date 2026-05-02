@@ -18,7 +18,7 @@ def test_move(handler):
 
 def test_snake_growth(handler):
     handler.snake = [(WINDOW_WIDTH//2,WINDOW_HEIGHT//2), (WINDOW_WIDTH//2 - TILE_SIZE,WINDOW_HEIGHT//2)]
-    handler.fruit = (WINDOW_WIDTH//2 + TILE_SIZE,WINDOW_HEIGHT//2)
+    handler.fruit = [(WINDOW_WIDTH//2 + TILE_SIZE,WINDOW_HEIGHT//2)]
     len_before = len(handler.snake)
     handler.last_input = 'd'
     handler.move_snake()
@@ -56,9 +56,9 @@ def test_fruit_generation(handler):
     handler.snake = [(0, 0), (TILE_SIZE, 0), (2 * TILE_SIZE, 0)]
     for _ in range(10):
         handler.gerar_nova_fruta()
-        x, y = handler.fruit
-        assert x % TILE_SIZE == 0 and y % TILE_SIZE == 0
-        assert handler.fruit not in handler.snake
+        # todas as frutas devem estar alinhadas e não sobrepor o corpo
+        assert all(x % TILE_SIZE == 0 and y % TILE_SIZE == 0 for x, y in handler.fruit)
+        assert all(f not in handler.snake for f in handler.fruit)
 
 
 def test_prevent_reverse_direction(handler):

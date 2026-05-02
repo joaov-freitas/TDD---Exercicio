@@ -32,7 +32,7 @@ class io_handler:
         start_x = (GRID_WIDTH // 2) * TILE_SIZE
         start_y = (GRID_HEIGHT // 2) * TILE_SIZE
         self.snake = [(start_x, start_y), (start_x - TILE_SIZE, start_y)]
-
+        self.fruit = []
         self.gerar_nova_fruta()
 
     def aligned(self, pos):
@@ -57,7 +57,24 @@ class io_handler:
 
         self.snake.insert(0, nova_cabeca)
 
-        if self.aligned(nova_cabeca) == self.aligned(self.fruit):
+        # se comeu uma fruta (frutas armazenadas em lista ou tupla), remove-a e não remove a cauda
+        eaten = False
+        fruits_list = self.fruit if isinstance(self.fruit, list) else [self.fruit]
+        for f in list(fruits_list):
+            if self.aligned(nova_cabeca) == self.aligned(f):
+                # remover a fruta
+                if isinstance(self.fruit, list):
+                    try:
+                        self.fruit.remove(f)
+                    except ValueError:
+                        pass
+                else:
+                    self.fruit = []
+                eaten = True
+                break
+
+        if eaten:
+            # repõe frutas até a quantidade adequada
             self.gerar_nova_fruta()
         else:
             self.snake.pop()
@@ -95,15 +112,25 @@ class io_handler:
         return (d1 == a and d2 == b) or (d1 == b and d2 == a)
 
     def gerar_nova_fruta(self):
-        while True:
+        # quantidade de frutas depende do tamanho da cobra:
+        # 1 fruta até tamanho 10, 2 frutas a partir de 11, 3 a partir de 21, etc.
+        amount_fruits = ((len(self.snake) - 1) // 10) + 1
+
+        # preenche lista de frutas até atingir a quantidade alvo, com limite de tentativas
+        attempts = 0
+        max_attempts = 1000
+        while len(self.fruit) < amount_fruits and attempts < max_attempts:
+            attempts += 1
             nova_fruta = (
                 random.randrange(0, WINDOW_WIDTH, TILE_SIZE),
                 random.randrange(0, WINDOW_HEIGHT, TILE_SIZE),
             )
-            
-            if nova_fruta not in self.snake:
-                self.fruit = nova_fruta
-                break
+            if nova_fruta not in self.snake and nova_fruta not in self.fruit:
+                self.fruit.append(nova_fruta)
+
+        # se houver frutas a mais (por exemplo após reduzir o tamanho da cobra), corte o excesso
+        if len(self.fruit) > amount_fruits:
+            self.fruit = self.fruit[:amount_fruits]
 
     def check_game_over(self):
         head = self.snake[0]
@@ -190,8 +217,9 @@ def game_loop():
     while running:
         screen.fill((0, 0, 0))
 
-        # desenhar comida
-        screen.blit(food_img, instance.fruit)
+        # desenhar frutas
+        for fruit in instance.fruit:
+            screen.blit(food_img, fruit)
 
         # desenhar cobra
         for i in range(len(instance.snake)):
@@ -201,6 +229,8 @@ def game_loop():
 
         instance.move_snake()
         instance.check_game_over()
+
+        print(f"Fruits: {instance.fruit}")
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
