@@ -33,6 +33,12 @@ class io_handler:
         start_y = (GRID_HEIGHT // 2) * TILE_SIZE
         self.snake = [(start_x, start_y), (start_x - TILE_SIZE, start_y)]
         self.fruit = []
+        # velocidade: base em FPS; aumenta quando o número alvo de frutas aumenta
+        self.base_fps = 10
+        self.fps_increment = 2
+        # valor atual usado pelo game loop
+        self.current_fps = self.base_fps
+
         self.gerar_nova_fruta()
 
     def aligned(self, pos):
@@ -132,15 +138,14 @@ class io_handler:
         if len(self.fruit) > amount_fruits:
             self.fruit = self.fruit[:amount_fruits]
 
+        # atualiza velocidade da cobra conforme quantidade alvo de frutas
+        # quanto maior amount_fruits, maior o FPS
+        self.current_fps = self.base_fps + (amount_fruits - 1) * self.fps_increment
+
     def check_game_over(self):
         head = self.snake[0]
         if head in self.snake[1:]:
             self.last_input = 'end'
-            if pygame.get_init() and pygame.display.get_init():
-                try:
-                    pygame.event.post(pygame.event.Event(pygame.QUIT))
-                except Exception:
-                    pass
             print("Game Over! A cobra colidiu consigo mesma.")
 
     def get_sprite(self, i):
@@ -191,6 +196,11 @@ def game_loop():
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     clock = pygame.time.Clock()
+    # font para exibir pontuação/frutas
+    try:
+        font = pygame.font.SysFont(None, 36)
+    except Exception:
+        font = None
 
     SPRITES = {
         SpriteDirection.HEAD_UP: pygame.image.load('./Graphics/head_up.png').convert_alpha(),
@@ -213,8 +223,54 @@ def game_loop():
 
     instance = io_handler()
     running = True
+    game_over = False
 
     while running:
+        if game_over:
+            # tela de game over com menu
+            screen.fill((0, 0, 0))
+
+            # texto de game over
+            if font:
+                title = font.render("GAME OVER!", True, (255, 0, 0))
+                screen.blit(title, (WINDOW_WIDTH // 2 - title.get_width() // 2, 100))
+
+                score_text = font.render(f"Pontos: {len(instance.snake)}", True, (255, 255, 255))
+                screen.blit(score_text, (WINDOW_WIDTH // 2 - score_text.get_width() // 2, 200))
+
+            # botões
+            restart_rect = pygame.Rect(WINDOW_WIDTH // 2 - 100, 350, 200, 50)
+            quit_rect = pygame.Rect(WINDOW_WIDTH // 2 - 100, 450, 200, 50)
+
+            # desenhar botões
+            pygame.draw.rect(screen, (0, 255, 0), restart_rect)
+            pygame.draw.rect(screen, (255, 0, 0), quit_rect)
+
+            if font:
+                restart_label = font.render("Recomeçar", True, (0, 0, 0))
+                quit_label = font.render("Encerrar", True, (255, 255, 255))
+                screen.blit(restart_label, (restart_rect.x + restart_rect.width // 2 - restart_label.get_width() // 2, restart_rect.y + 10))
+                screen.blit(quit_label, (quit_rect.x + quit_rect.width // 2 - quit_label.get_width() // 2, quit_rect.y + 10))
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if restart_rect.collidepoint(event.pos):
+                        game_over = False
+                        instance = io_handler()
+                    elif quit_rect.collidepoint(event.pos):
+                        running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_r:
+                        game_over = False
+                        instance = io_handler()
+                    elif event.key == pygame.K_ESCAPE:
+                        running = False
+
+            pygame.display.flip()
+            continue
+
         screen.fill((0, 0, 0))
 
         # desenhar frutas
@@ -230,7 +286,15 @@ def game_loop():
         instance.move_snake()
         instance.check_game_over()
 
-        print(f"Fruits: {instance.fruit}")
+        if instance.last_input == 'end':
+            game_over = True
+            continue
+
+        # desenhar texto com pontos (tamanho da cobra)
+        if font:
+            text = f"Pontos: {len(instance.snake)}"
+            surf = font.render(text, True, (255, 255, 255))
+            screen.blit(surf, (10, 10))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -246,9 +310,12 @@ def game_loop():
                     instance.change_direction('d')
                 elif event.key == pygame.K_ESCAPE:
                     running = False
+                elif event.key == pygame.K_r:
+                    game_over = True
 
         pygame.display.flip()
-        clock.tick(10) #velocidade da cobra
+        # usar FPS atual definido pelo handler
+        clock.tick(instance.current_fps)
 
     pygame.quit()
 
