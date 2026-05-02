@@ -109,7 +109,11 @@ class io_handler:
         head = self.snake[0]
         if head in self.snake[1:]:
             self.last_input = 'end'
-            pygame.event.post(pygame.event.Event(pygame.QUIT))
+            if pygame.get_init() and pygame.display.get_init():
+                try:
+                    pygame.event.post(pygame.event.Event(pygame.QUIT))
+                except Exception:
+                    pass
             print("Game Over! A cobra colidiu consigo mesma.")
 
     def get_sprite(self, i):
